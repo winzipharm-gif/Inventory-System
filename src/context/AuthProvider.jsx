@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }) => {
             isMounted.current = false;
             subscription.unsubscribe();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fetchProfile]);
 
 

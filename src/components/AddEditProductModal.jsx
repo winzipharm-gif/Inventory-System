@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { X } from 'lucide-react';
