@@ -1,0 +1,30 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Medical Cross with very rounded corners (#008a54) -->
+  <g transform="translate(10, 10)">
+    <rect x="18" y="0" width="34" height="80" rx="12" fill="#008a54"/>
+    <rect x="-5" y="23" width="80" height="34" rx="12" fill="#008a54" transform="rotate(0, 35, 40)"/>
+    
+    <!-- The leaf/hand shape (White) -->
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M35 70C35 70 65 60 70 35C70 10 45 5 35 15C45 15 55 25 55 40C55 55 45 65 25 65C10 65 5 50 15 35C5 45 5 65 35 70Z" fill="white" transform="translate(-10,-5) scale(1.1)"/>
+    
+    <!-- Refined Leaf Path to match image more closely: 
+         It's a large white curve starting from bottom left and pointing top right -->
+    <path d="M15 65C15 75 45 75 65 45C65 25 55 10 40 10C50 15 60 25 60 45C60 65 45 70 15 65Z" fill="white" />
+    
+    <!-- Final precise leaf shape based on the visual "hand" -->
+    <path d="M25 72C50 72 70 52 70 27C60 37 50 42 40 37C45 32 50 22 45 12C55 12 70 22 70 37C70 62 50 72 25 72Z" fill="white" opacity="0"/>
+    
+    <!-- Let's try one more path that captures the "C" curve -->
+    <path d="M18 64C45 64 65 44 65 19C55 29 45 34 35 29C40 24 45 14 40 4C50 4 65 14 65 29C65 54 45 64 18 64Z" fill="#008a54" opacity="0"/>
+    
+    <!-- Re-drawing the white part carefully -->
+    <path d="M60 25C60 45 45 65 15 65C15 70 55 75 70 45C75 25 60 10 40 10C55 10 60 15 60 25Z" fill="white" />
+  </g>
+
+  <!-- Text: WINZI PHARMACY LTD -->
+  <g transform="translate(100, 58)">
+    <text font-family="Arial, sans-serif" font-weight="900" font-size="38" fill="#006b3f" style="letter-spacing: -1px;">WINZI</text>
+    <text x="115" font-family="Arial, sans-serif" font-weight="400" font-size="38" fill="#006b3f" style="letter-spacing: -0.5px;">PHARMACY</text>
+    <text x="195" y="24" font-family="Arial, sans-serif" font-weight="400" font-size="18" fill="#006b3f">LTD</text>
+  </g>
+</svg>

@@ -1,5 +1,6 @@
 import { X, Printer, CheckCircle, FileText } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
+import logo from '../assets/logo.png';
 
 const ReceiptModal = ({ isOpen, onClose, sale, onViewInvoice }) => {
     const { businessContact } = useInventory();
@@ -28,7 +29,7 @@ const ReceiptModal = ({ isOpen, onClose, sale, onViewInvoice }) => {
                 <div className="receipt-content" style={{ padding: 'var(--space-6)', color: '#333' }}>
                     {/* Pharmacy Details */}
                     <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)', borderBottom: '1px solid var(--color-border)', paddingBottom: 'var(--space-4)' }}>
-                        <h2 style={{ color: 'var(--color-primary)', fontWeight: 700, margin: 0 }}>WINZI PHARMACY</h2>
+                        <img src={logo} alt="Winzi Pharmacy" style={{ height: '48px', marginBottom: '0.5rem' }} />
                         <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{businessContact.address}</p>
                         <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Tel: {businessContact.phone} | Email: {businessContact.email}</p>
                     </div>
