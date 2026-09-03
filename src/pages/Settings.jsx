@@ -10,7 +10,7 @@ import { Palette, Check, Building2, Save, Users, Plus, Trash2, ShieldCheck, User
 const Settings = () => {
     const { theme, setTheme } = useTheme();
     const { businessContact, setBusinessContact } = useInventory();
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
     const [contactForm, setContactForm] = useState(businessContact);
     const [saved, setSaved] = useState(false);
 
@@ -20,17 +20,19 @@ const Settings = () => {
     const [userFormError, setUserFormError] = useState('');
     const [userFormSuccess, setUserFormSuccess] = useState('');
     const [isCreatingUser, setIsCreatingUser] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState(null);
 
     useEffect(() => {
         setContactForm(businessContact);
     }, [businessContact]);
 
+    const fetchUsers = async () => {
+        const { data } = await supabase.from('profiles').select('id, full_name, role');
+        if (data) setUsers(data);
+    };
+
     useEffect(() => {
         if (!isAdmin) return;
-        const fetchUsers = async () => {
-            const { data } = await supabase.from('profiles').select('id, role');
-            if (data) setUsers(data);
-        };
         fetchUsers();
     }, [isAdmin]);
 
@@ -63,14 +65,39 @@ const Settings = () => {
             } else {
                 setUserFormSuccess(`✓ User "${newUserForm.email}" created successfully!`);
                 setNewUserForm({ email: '', password: '', role: 'user' });
-                // Refresh the list
-                const { data } = await supabase.from('profiles').select('id, role');
-                if (data) setUsers(data);
+                await fetchUsers();
             }
         } catch {
             setUserFormError('Network error. Please try again.');
         } finally {
             setIsCreatingUser(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId, userName) => {
+        if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) return;
+        setDeletingUserId(userId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ userId })
+            });
+            const result = await res.json();
+            if (!res.ok) {
+                alert(result.error || 'Failed to delete user.');
+            } else {
+                await fetchUsers();
+            }
+        } catch {
+            alert('Network error. Please try again.');
+        } finally {
+            setDeletingUserId(null);
         }
     };
 
@@ -255,7 +282,7 @@ const Settings = () => {
                         </div>
                         <div>
                             <h3 style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>User Management</h3>
-                            <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Create new system users. Only visible to admins.</p>
+                            <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Create and manage system users. Only visible to admins.</p>
                         </div>
                     </div>
 
@@ -323,17 +350,45 @@ const Settings = () => {
                             System Users ({users.length})
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                            {users.map((u) => (
-                                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                                        {u.role === 'admin' ? <ShieldCheck size={16} color="var(--color-primary)" /> : <User size={16} color="var(--color-text-muted)" />}
-                                        <span style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>{u.id.slice(0, 8)}...</span>
+                            {users.map((u) => {
+                                const isSelf = u.id === user?.id;
+                                return (
+                                    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                                            {u.role === 'admin' ? <ShieldCheck size={16} color="var(--color-primary)" /> : <User size={16} color="var(--color-text-muted)" />}
+                                            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{u.full_name || u.id.slice(0, 8) + '...'}</span>
+                                            {isSelf && <span style={{ fontSize: '0.7rem', padding: '1px 8px', borderRadius: '999px', background: 'var(--color-primary)', color: '#fff', fontWeight: 600 }}>You</span>}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                                            <span style={{ fontSize: '0.8rem', padding: '2px 10px', borderRadius: '999px', fontWeight: 600, background: u.role === 'admin' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)', color: u.role === 'admin' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+                                                {u.role === 'admin' ? 'Admin' : 'Staff'}
+                                            </span>
+                                            {!isSelf && (
+                                                <button
+                                                    onClick={() => handleDeleteUser(u.id, u.full_name || u.id.slice(0, 8))}
+                                                    disabled={deletingUserId === u.id}
+                                                    title="Delete user"
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: '1px solid var(--color-border)',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        padding: '6px',
+                                                        cursor: deletingUserId === u.id ? 'wait' : 'pointer',
+                                                        color: 'var(--color-error)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        opacity: deletingUserId === u.id ? 0.5 : 1,
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span style={{ fontSize: '0.8rem', padding: '2px 10px', borderRadius: '999px', fontWeight: 600, background: u.role === 'admin' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)', color: u.role === 'admin' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
-                                        {u.role === 'admin' ? 'Admin' : 'Staff'}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

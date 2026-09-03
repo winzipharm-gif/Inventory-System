@@ -5,6 +5,59 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Verify the caller is an authenticated admin.
+ * Returns the callerUser on success, or a Response on failure.
+ */
+async function verifyAdmin(req: Request) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Missing authorization header.' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const callerToken = authHeader.replace('Bearer ', '');
+
+  const anonClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+  );
+  const { data: { user: callerUser }, error: callerError } = await anonClient.auth.getUser(callerToken);
+
+  if (callerError || !callerUser) {
+    return new Response(JSON.stringify({ error: 'Unauthorized.' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const { data: callerProfile } = await anonClient
+    .from('profiles')
+    .select('role')
+    .eq('id', callerUser.id)
+    .single();
+
+  if (!callerProfile || callerProfile.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Only admins can manage users.' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  return callerUser;
+}
+
+/** Build a service-role admin client for privileged operations. */
+function getAdminClient() {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -12,46 +65,54 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 1. Verify caller is an authenticated admin
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // ── DELETE USER ──────────────────────────────────────────────
+    if (req.method === 'DELETE') {
+      const authResult = await verifyAdmin(req);
+      if (authResult instanceof Response) return authResult;
+      const callerUser = authResult;
+
+      const { userId } = await req.json();
+      if (!userId) {
+        return new Response(JSON.stringify({ error: 'userId is required.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Prevent self-deletion
+      if (userId === callerUser.id) {
+        return new Response(JSON.stringify({ error: 'You cannot delete your own account.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const adminClient = getAdminClient();
+
+      // Delete from auth (this cascades – the profile row will be
+      // removed if there is an ON DELETE CASCADE, otherwise we
+      // clean it up manually below).
+      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
+      if (deleteAuthError) {
+        return new Response(JSON.stringify({ error: deleteAuthError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Also remove the profile row (safe even if it was already cascaded)
+      await adminClient.from('profiles').delete().eq('id', userId);
+
+      return new Response(
+        JSON.stringify({ message: 'User deleted successfully.' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
-    const callerToken = authHeader.replace('Bearer ', '');
+    // ── CREATE USER (POST) ──────────────────────────────────────
+    const authResult = await verifyAdmin(req);
+    if (authResult instanceof Response) return authResult;
 
-    // Use the anon client to verify the caller's JWT
-    const anonClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-    );
-    const { data: { user: callerUser }, error: callerError } = await anonClient.auth.getUser(callerToken);
-
-    if (callerError || !callerUser) {
-      return new Response(JSON.stringify({ error: 'Unauthorized.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check the caller's profile role
-    const { data: callerProfile } = await anonClient
-      .from('profiles')
-      .select('role')
-      .eq('id', callerUser.id)
-      .single();
-
-    if (!callerProfile || callerProfile.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Only admins can create users.' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // 2. Parse the request body
     const { email, password, role } = await req.json();
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Email and password are required.' }), {
@@ -62,12 +123,7 @@ Deno.serve(async (req: Request) => {
 
     const validRole = role === 'admin' ? 'admin' : 'user';
 
-    // 3. Use the service role client to create the user (no session side-effects)
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    const adminClient = getAdminClient();
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
@@ -83,7 +139,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 4. Upsert the profile with the correct role
+    // Upsert the profile with the correct role
     // (The DB trigger should handle this, but we upsert to be safe)
     if (newUser?.user) {
       await adminClient.from('profiles').upsert({
@@ -95,7 +151,7 @@ Deno.serve(async (req: Request) => {
 
     return new Response(
       JSON.stringify({ message: 'User created successfully.', userId: newUser?.user?.id }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
     console.error('Unexpected error:', err);

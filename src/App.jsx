@@ -11,10 +11,13 @@ import AuditTrail from './pages/AuditTrail';
 import Login from './pages/Login';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, profile, loading, isAdmin } = useAuth();
   const location = useLocation();
 
-  if (loading) return (
+  // Show spinner while auth is initialising OR while the profile
+  // hasn't been fetched yet (user exists but profile is still null).
+  const profilePending = !!user && !profile;
+  if (loading || profilePending) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: 'var(--color-bg-app)' }}>
       <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
     </div>
