@@ -45,7 +45,11 @@ const Settings = () => {
         setIsCreatingUser(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch('https://vivbsrvnrlqwbnmnhrrb.supabase.co/functions/v1/create-user', {
+            if (!session) {
+                setUserFormError('Your session has expired. Please log in again.');
+                return;
+            }
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -8,25 +8,39 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const isMounted = useRef(true);
 
-    const fetchProfile = useCallback(async (userId) => {
+    /**
+     * Fetch the user's profile from the `profiles` table.
+     * Retries up to `maxRetries` times with a delay to handle the race condition
+     * where the DB trigger hasn't inserted the profile row yet when auth fires.
+     */
+    const fetchProfile = useCallback(async (userId, retries = 5, delayMs = 600) => {
         if (!userId) return null;
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, full_name, role')
-                .eq('id', userId)
-                .single();
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, role')
+                    .eq('id', userId)
+                    .single();
 
-            if (error) {
-                console.error('Error fetching profile:', error.message);
-                return null;
+                if (!error && data) {
+                    if (isMounted.current) setProfile(data);
+                    return data;
+                }
+                // If the profile isn't ready yet, wait and retry
+                if (attempt < retries) {
+                    console.warn(`Auth: Profile not found for ${userId}, retrying (${attempt}/${retries})...`);
+                    await new Promise((res) => setTimeout(res, delayMs));
+                } else {
+                    console.error('Auth: Could not fetch profile after retries:', error?.message);
+                }
+            } catch (err) {
+                console.error('Unexpected error in fetchProfile:', err);
+                if (attempt === retries) return null;
+                await new Promise((res) => setTimeout(res, delayMs));
             }
-            if (isMounted.current) setProfile(data);
-            return data;
-        } catch (err) {
-            console.error('Unexpected error in fetchProfile:', err);
-            return null;
         }
+        return null;
     }, []);
 
     useEffect(() => {
