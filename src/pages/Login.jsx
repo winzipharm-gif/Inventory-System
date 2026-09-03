@@ -196,14 +196,6 @@ const Login = () => {
                     >
                         {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : 'Enter Dashboard'}
                     </button>
-
-                    <div style={{ textAlign: 'center', marginTop: 'var(--space-2)' }}>
-                        <div style={{ display: 'inline-block', padding: 'var(--space-2) var(--space-3)', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                            <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.75rem', margin: 0, letterSpacing: '0.02em' }}>
-                                <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Admin:</span> admin@winzi.com | <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Staff:</span> user@winzi.com
-                            </p>
-                        </div>
-                    </div>
                 </form>
             </div>
         </div>
