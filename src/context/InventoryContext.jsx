@@ -67,10 +67,11 @@ export const InventoryProvider = ({ children }) => {
     }, []);
 
     const { user, loading: authLoading } = useAuth();
+    const userId = user?.id;
 
     useEffect(() => {
-        if (!user || authLoading) {
-            if (!authLoading && !user) {
+        if (!userId || authLoading) {
+            if (!authLoading && !userId) {
                 // Clear state on logout
                 setInventory([]);
                 setSales([]);
@@ -95,7 +96,7 @@ export const InventoryProvider = ({ children }) => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [fetchData, user, authLoading]);
+    }, [fetchData, userId, authLoading]);
 
     const addProduct = async (product) => {
         const { data, error } = await supabase.from('inventory').insert([{

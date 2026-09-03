@@ -21,23 +21,11 @@ const Sidebar = () => {
 
     const handleLogout = async () => {
         try {
-            // Force navigation immediately
+            await signOut();
             navigate('/login', { replace: true });
-            
-            // Clear local storage manually as a fallback for Supabase lock issues
-            const keysToRemove = Object.keys(localStorage).filter(key => key.startsWith('sb-'));
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-            
-            // Attempt clean signout but don't wait forever if it's locked
-            await Promise.race([
-                signOut(),
-                new Promise(resolve => setTimeout(resolve, 2000))
-            ]);
-            
-            window.location.reload(); // Hard refresh to clear all context state
         } catch (error) {
             console.error('Logout error:', error);
-            window.location.reload();
+            navigate('/login', { replace: true });
         }
     };
 

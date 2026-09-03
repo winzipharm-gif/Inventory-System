@@ -10,18 +10,19 @@ import Settings from './pages/Settings';
 import AuditTrail from './pages/AuditTrail';
 import Login from './pages/Login';
 
+const LoadingSpinner = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: 'var(--color-bg-app)' }}>
+    <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
+  </div>
+);
+
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { user, profile, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
 
-  // Show spinner while auth is initialising OR while the profile
-  // hasn't been fetched yet (user exists but profile is still null).
-  const profilePending = !!user && !profile;
-  if (loading || profilePending) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: 'var(--color-bg-app)' }}>
-      <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
-    </div>
-  );
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -37,7 +38,9 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 const PublicRoute = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
 
-  if (loading) return null;
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   if (user) {
     return <Navigate to={isAdmin ? '/' : '/sales'} replace />;
