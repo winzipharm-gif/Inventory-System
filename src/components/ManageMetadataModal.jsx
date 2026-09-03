@@ -47,70 +47,84 @@ const ManageMetadataModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-            <div className="card" style={{ width: '100%', maxWidth: '500px', padding: 0, animation: 'fadeIn 0.2s ease-out' }}>
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 1100 }}>
+            <div className="card" style={{ 
+                width: '100%', 
+                maxWidth: '480px', 
+                maxHeight: '90dvh',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 0, 
+                animation: 'fadeIn 0.2s ease-out',
+                overflow: 'hidden'
+            }}>
                 <div style={{
-                    padding: 'var(--space-4) var(--space-6)',
+                    padding: 'var(--space-4) var(--space-5)',
                     borderBottom: '1px solid var(--color-border)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    flexShrink: 0
                 }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Manage Labels</h3>
-                    <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }}>
-                        <X size={24} />
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Manage Labels</h3>
+                    <button onClick={onClose} style={{ color: 'var(--color-text-muted)', padding: '4px' }} aria-label="Close modal">
+                        <X size={22} />
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)' }}>
+                <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
                     <button
                         onClick={() => { setActiveTab('categories'); setEditingItem(null); }}
                         style={{
                             flex: 1,
-                            padding: '1rem',
+                            padding: '0.85rem',
                             border: 'none',
                             background: 'none',
-                            fontWeight: 600,
+                            fontWeight: 700,
+                            fontSize: '0.875rem',
                             color: activeTab === 'categories' ? 'var(--color-primary)' : 'var(--color-text-muted)',
                             borderBottom: activeTab === 'categories' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            minHeight: '44px'
                         }}
                     >
-                        Categories
+                        Categories ({categories.length})
                     </button>
                     <button
                         onClick={() => { setActiveTab('units'); setEditingItem(null); }}
                         style={{
                             flex: 1,
-                            padding: '1rem',
+                            padding: '0.85rem',
                             border: 'none',
                             background: 'none',
-                            fontWeight: 600,
+                            fontWeight: 700,
+                            fontSize: '0.875rem',
                             color: activeTab === 'units' ? 'var(--color-primary)' : 'var(--color-text-muted)',
                             borderBottom: activeTab === 'units' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            minHeight: '44px'
                         }}
                     >
-                        Units
+                        Units ({units.length})
                     </button>
                 </div>
 
-                <div style={{ padding: 'var(--space-6)' }}>
-                    <form onSubmit={handleAdd} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
+                <div style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+                    <form onSubmit={handleAdd} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-5)' }}>
                         <input
                             className="input-field"
-                            placeholder={activeTab === 'categories' ? "New Category Name" : "New Unit (e.g. packs)"}
+                            placeholder={activeTab === 'categories' ? "New Category Name..." : "New Unit (e.g. packs)..."}
                             value={newItem}
                             onChange={(e) => setNewItem(e.target.value)}
-                            autoFocus
+                            style={{ minHeight: '42px' }}
                         />
-                        <button type="submit" className="btn btn-primary" style={{ padding: '0 1rem' }}>
-                            <Plus size={20} />
+                        <button type="submit" className="btn btn-primary" style={{ padding: '0 1.25rem', minHeight: '42px' }} aria-label="Add item">
+                            <Plus size={18} />
                         </button>
                     </form>
 
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 'var(--space-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div>
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: 'var(--space-3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             Existing {activeTab === 'categories' ? 'Categories' : 'Units'}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
@@ -121,17 +135,17 @@ const ManageMetadataModal = ({ isOpen, onClose }) => {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        padding: '0.75rem 1rem',
+                                        padding: '0.65rem 0.85rem',
                                         backgroundColor: 'var(--color-bg-app)',
                                         borderRadius: 'var(--radius-md)'
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
-                                        {activeTab === 'categories' ? <Tag size={16} className="text-muted" /> : <Ruler size={16} className="text-muted" />}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1, minWidth: 0 }}>
+                                        {activeTab === 'categories' ? <Tag size={16} className="text-muted" style={{ flexShrink: 0 }} /> : <Ruler size={16} className="text-muted" style={{ flexShrink: 0 }} />}
                                         {editingItem === item ? (
                                             <input
                                                 className="input-field"
-                                                style={{ padding: '4px 8px', height: 'auto', fontSize: '0.875rem' }}
+                                                style={{ padding: '4px 8px', height: 'auto', fontSize: '0.85rem' }}
                                                 value={editText}
                                                 onChange={(e) => setEditText(e.target.value)}
                                                 autoFocus
@@ -141,14 +155,14 @@ const ManageMetadataModal = ({ isOpen, onClose }) => {
                                                 }}
                                             />
                                         ) : (
-                                            <span style={{ fontWeight: 500 }}>{item}</span>
+                                            <span style={{ fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
                                         )}
                                     </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '0.75rem', flexShrink: 0 }}>
                                         {editingItem === item ? (
                                             <button
                                                 onClick={() => handleSaveEdit(item)}
-                                                style={{ color: 'var(--color-success)', fontSize: '0.75rem', fontWeight: 600 }}
+                                                style={{ color: 'var(--color-success)', fontSize: '0.75rem', fontWeight: 700, padding: '4px' }}
                                             >
                                                 Save
                                             </button>
@@ -156,15 +170,19 @@ const ManageMetadataModal = ({ isOpen, onClose }) => {
                                             <>
                                                 <button
                                                     onClick={() => handleStartEdit(item)}
-                                                    style={{ color: 'var(--color-primary)', opacity: 0.6 }}
+                                                    className="btn-icon"
+                                                    style={{ width: '32px', height: '32px', color: 'var(--color-primary)' }}
+                                                    aria-label={`Edit ${item}`}
                                                 >
-                                                    <Edit2 size={16} />
+                                                    <Edit2 size={15} />
                                                 </button>
                                                 <button
                                                     onClick={() => activeTab === 'categories' ? deleteCategory(item) : deleteUnit(item)}
-                                                    style={{ color: 'var(--color-error)', opacity: 0.6 }}
+                                                    className="btn-icon"
+                                                    style={{ width: '32px', height: '32px', color: 'var(--color-error)' }}
+                                                    aria-label={`Delete ${item}`}
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={15} />
                                                 </button>
                                             </>
                                         )}
@@ -175,8 +193,8 @@ const ManageMetadataModal = ({ isOpen, onClose }) => {
                     </div>
                 </div>
 
-                <div style={{ padding: 'var(--space-4) var(--space-6)', borderTop: '1px solid var(--color-border)', textAlign: 'right' }}>
-                    <button className="btn btn-outline" onClick={onClose}>Done</button>
+                <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--color-border)', textAlign: 'right', flexShrink: 0 }}>
+                    <button className="btn btn-outline" style={{ minHeight: '40px', minWidth: '100px' }} onClick={onClose}>Done</button>
                 </div>
             </div>
         </div>

@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { useState, useEffect, useCallback } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import '../styles/layout.css';
 
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const location = useLocation();
 
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const toggleSidebar = useCallback(() => setIsSidebarOpen(prev => !prev), []);
+    const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+
+    // Close sidebar on route change on mobile devices
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [location.pathname]);
+
+    // Close sidebar on Escape key press
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [closeSidebar]);
 
     return (
         <div className="app-layout">
             <div className={`sidebar-wrapper ${isSidebarOpen ? 'open' : ''}`}>
-                <Sidebar />
+                <Sidebar closeSidebar={closeSidebar} />
             </div>
 
-            {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+            <div 
+                className={`sidebar-overlay ${isSidebarOpen ? 'active' : ''}`} 
+                onClick={closeSidebar}
+                aria-hidden="true"
+            />
 
             <div className="main-content">
-                <Topbar toggleSidebar={toggleSidebar} />
+                <Topbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
                 <main className="page-content">
                     <Outlet />
                 </main>

@@ -111,8 +111,8 @@ const Settings = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
             {/* Header */}
             <div>
-                <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600 }}>Settings</h2>
-                <p className="text-muted">Customize your application preferences.</p>
+                <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700 }}>Settings</h2>
+                <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Customize pharmacy theme, contact information, and users.</p>
             </div>
 
             {/* Appearance */}
@@ -122,21 +122,22 @@ const Settings = () => {
                         width: 40, height: 40,
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-primary-light)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0
                     }}>
                         <Palette size={20} color="var(--color-primary)" />
                     </div>
                     <div>
-                        <h3 style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>Appearance</h3>
+                        <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>Appearance & Theme</h3>
                         <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
-                            Choose a theme. Changes apply instantly and are saved automatically.
+                            Choose your preferred visual theme across all devices.
                         </p>
                     </div>
                 </div>
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 140px), 1fr))',
                     gap: 'var(--space-4)'
                 }}>
                     {THEMES.map((t) => {
@@ -155,9 +156,9 @@ const Settings = () => {
                                     cursor: 'pointer',
                                     background: 'transparent',
                                     transition: 'all var(--transition-fast)',
-                                    transform: isActive ? 'scale(1.04)' : 'scale(1)',
+                                    transform: isActive ? 'scale(1.02)' : 'scale(1)',
                                     boxShadow: isActive
-                                        ? `0 0 0 4px ${t.preview.primary}33`
+                                        ? `0 0 0 3px ${t.preview.primary}33`
                                         : 'var(--shadow-sm)',
                                 }}
                             >
@@ -166,13 +167,13 @@ const Settings = () => {
                                     background: t.preview.bg,
                                     padding: '12px',
                                     position: 'relative',
-                                    height: 70,
+                                    height: 64,
                                 }}>
                                     {/* Mini app preview */}
                                     <div style={{ display: 'flex', gap: 5, height: '100%' }}>
                                         {/* Sidebar */}
                                         <div style={{
-                                            width: 18,
+                                            width: 16,
                                             background: t.preview.surface,
                                             borderRadius: 3,
                                             display: 'flex',
@@ -186,10 +187,9 @@ const Settings = () => {
                                         </div>
                                         {/* Content */}
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                            <div style={{ height: 12, background: t.preview.surface, borderRadius: 2 }} />
-                                            <div style={{ height: 8, background: t.preview.primary, borderRadius: 2, width: '60%', opacity: 0.7 }} />
-                                            <div style={{ height: 8, background: t.preview.surface, borderRadius: 2, opacity: 0.5 }} />
-                                            <div style={{ height: 8, background: t.preview.surface, borderRadius: 2, width: '80%', opacity: 0.5 }} />
+                                            <div style={{ height: 10, background: t.preview.surface, borderRadius: 2 }} />
+                                            <div style={{ height: 6, background: t.preview.primary, borderRadius: 2, width: '60%', opacity: 0.7 }} />
+                                            <div style={{ height: 6, background: t.preview.surface, borderRadius: 2, opacity: 0.5 }} />
                                         </div>
                                     </div>
                                     {/* Active checkmark */}
@@ -212,7 +212,7 @@ const Settings = () => {
                                     textAlign: 'left',
                                     borderTop: `2px solid ${isActive ? t.preview.primary : 'transparent'}`,
                                 }}>
-                                    <p style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--color-text-main)', margin: 0 }}>{t.name}</p>
+                                    <p style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--color-text-main)', margin: 0 }}>{t.name}</p>
                                     <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', margin: 0 }}>{t.description}</p>
                                 </div>
                             </button>
@@ -228,26 +228,27 @@ const Settings = () => {
                         width: 40, height: 40,
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-primary-light)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0
                     }}>
                         <Building2 size={20} color="var(--color-primary)" />
                     </div>
                     <div>
-                        <h3 style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>Business Contact</h3>
+                        <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>Business Contact Info</h3>
                         <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
-                            Appears on all receipts and invoices.
+                            Printed automatically on receipts and invoices.
                         </p>
                     </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                     {[
-                        { label: 'Postal Address', key: 'address', placeholder: 'e.g. 123 Health Ave, Medical District' },
+                        { label: 'Pharmacy Address', key: 'address', placeholder: 'e.g. 123 Health Ave, Medical District' },
                         { label: 'Telephone Number', key: 'phone', placeholder: 'e.g. +233 24 000 0000' },
                         { label: 'Email Address', key: 'email', placeholder: 'e.g. info@winzipharmacy.com' },
                     ].map(({ label, key, placeholder }) => (
                         <div key={key}>
-                            <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>
+                            <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>
                                 {label}
                             </label>
                             <input
@@ -264,7 +265,7 @@ const Settings = () => {
                         <button
                             className="btn btn-primary"
                             onClick={handleContactSave}
-                            style={{ gap: 'var(--space-2)', minWidth: 120 }}
+                            style={{ gap: 'var(--space-2)', minWidth: 140, minHeight: '44px' }}
                         >
                             <Save size={16} />
                             {saved ? '✓ Saved!' : 'Save Contact'}
@@ -277,21 +278,21 @@ const Settings = () => {
             {isAdmin && (
                 <div className="card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Users size={20} color="var(--color-primary)" />
                         </div>
                         <div>
-                            <h3 style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)' }}>User Management</h3>
-                            <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Create and manage system users. Only visible to admins.</p>
+                            <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>User Management</h3>
+                            <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Create and manage staff accounts and roles.</p>
                         </div>
                     </div>
 
                     {/* Create User Form */}
                     <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', padding: 'var(--space-4)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)' }}>
-                        <h4 style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create New User</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                        <h4 style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create New Account</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--space-3)' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Email Address</label>
+                                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Email Address</label>
                                 <input
                                     className="input-field"
                                     type="email"
@@ -302,7 +303,7 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Password</label>
+                                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Password</label>
                                 <input
                                     className="input-field"
                                     type="password"
@@ -314,20 +315,21 @@ const Settings = () => {
                             </div>
                         </div>
                         <div>
-                            <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Access Role</label>
-                            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                            <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Access Level</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 'var(--space-2)' }}>
                                 {[{ value: 'user', label: 'Staff (POS Only)', Icon: User }, { value: 'admin', label: 'Admin (Full Access)', Icon: ShieldCheck }].map(({ value, label, Icon }) => (
                                     <button
                                         key={value}
                                         type="button"
                                         onClick={() => setNewUserForm(f => ({ ...f, role: value }))}
                                         style={{
-                                            flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)',
                                             padding: 'var(--space-3)', borderRadius: 'var(--radius-md)',
                                             border: `2px solid ${newUserForm.role === value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                            background: newUserForm.role === value ? 'var(--color-primary-light)' : 'transparent',
+                                            background: newUserForm.role === value ? 'var(--color-primary-light)' : 'var(--color-bg-surface)',
                                             cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-                                            color: newUserForm.role === value ? 'var(--color-primary)' : 'var(--color-text-muted)'
+                                            color: newUserForm.role === value ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                                            minHeight: '44px'
                                         }}
                                     >
                                         <Icon size={16} /> {label}
@@ -335,32 +337,32 @@ const Settings = () => {
                                 ))}
                             </div>
                         </div>
-                        {userFormError && <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', margin: 0 }}>{userFormError}</p>}
-                        {userFormSuccess && <p style={{ color: 'var(--color-success)', fontSize: '0.875rem', margin: 0 }}>{userFormSuccess}</p>}
+                        {userFormError && <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', margin: 0, fontWeight: 600 }}>{userFormError}</p>}
+                        {userFormSuccess && <p style={{ color: 'var(--color-success)', fontSize: '0.875rem', margin: 0, fontWeight: 600 }}>{userFormSuccess}</p>}
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button type="submit" className="btn btn-primary" disabled={isCreatingUser} style={{ gap: 'var(--space-2)', minWidth: 150 }}>
-                                <Plus size={16} /> {isCreatingUser ? 'Creating...' : 'Create User'}
+                            <button type="submit" className="btn btn-primary" disabled={isCreatingUser} style={{ gap: 'var(--space-2)', minWidth: 150, minHeight: '44px' }}>
+                                <Plus size={16} /> {isCreatingUser ? 'Creating...' : 'Create Account'}
                             </button>
                         </div>
                     </form>
 
                     {/* Existing Users List */}
                     <div>
-                        <h4 style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--space-3)' }}>
-                            System Users ({users.length})
+                        <h4 style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--space-3)' }}>
+                            System Accounts ({users.length})
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                             {users.map((u) => {
                                 const isSelf = u.id === user?.id;
                                 return (
-                                    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                                            {u.role === 'admin' ? <ShieldCheck size={16} color="var(--color-primary)" /> : <User size={16} color="var(--color-text-muted)" />}
-                                            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{u.full_name || u.id.slice(0, 8) + '...'}</span>
-                                            {isSelf && <span style={{ fontSize: '0.7rem', padding: '1px 8px', borderRadius: '999px', background: 'var(--color-primary)', color: '#fff', fontWeight: 600 }}>You</span>}
+                                    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minWidth: 0 }}>
+                                            {u.role === 'admin' ? <ShieldCheck size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} /> : <User size={18} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />}
+                                            <span style={{ fontSize: '0.875rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name || u.id.slice(0, 8) + '...'}</span>
+                                            {isSelf && <span style={{ fontSize: '0.7rem', padding: '1px 8px', borderRadius: '999px', background: 'var(--color-primary)', color: '#fff', fontWeight: 700, flexShrink: 0 }}>You</span>}
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                                            <span style={{ fontSize: '0.8rem', padding: '2px 10px', borderRadius: '999px', fontWeight: 600, background: u.role === 'admin' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)', color: u.role === 'admin' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
+                                            <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '999px', fontWeight: 700, background: u.role === 'admin' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)', color: u.role === 'admin' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
                                                 {u.role === 'admin' ? 'Admin' : 'Staff'}
                                             </span>
                                             {!isSelf && (
@@ -368,21 +370,14 @@ const Settings = () => {
                                                     onClick={() => handleDeleteUser(u.id, u.full_name || u.id.slice(0, 8))}
                                                     disabled={deletingUserId === u.id}
                                                     title="Delete user"
+                                                    aria-label="Delete user"
+                                                    className="btn-icon"
                                                     style={{
-                                                        background: 'transparent',
-                                                        border: '1px solid var(--color-border)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        padding: '6px',
-                                                        cursor: deletingUserId === u.id ? 'wait' : 'pointer',
                                                         color: 'var(--color-error)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        opacity: deletingUserId === u.id ? 0.5 : 1,
-                                                        transition: 'all 0.2s'
+                                                        opacity: deletingUserId === u.id ? 0.5 : 1
                                                     }}
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             )}
                                         </div>
@@ -396,16 +391,16 @@ const Settings = () => {
 
             {/* About */}
             <div className="card">
-                <h3 style={{ fontWeight: 600, fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>About</h3>
+                <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>About Application</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                     {[
-                        ['Application', 'Winzi Pharmacy POS'],
-                        ['Version', '1.0.0'],
-                        ['Contact', 'businesstribeconsult@gmail.com'],
+                        ['Application', 'Winzi Pharmacy Management & POS'],
+                        ['Version', '1.0.0 (Production)'],
+                        ['Contact Support', 'businesstribeconsult@gmail.com'],
                     ].map(([label, value]) => (
-                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--color-border)' }}>
-                            <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>{label}</span>
-                            <span style={{ fontWeight: 500, fontSize: 'var(--font-size-sm)' }}>{value}</span>
+                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--color-border)', fontSize: 'var(--font-size-sm)' }}>
+                            <span className="text-muted">{label}</span>
+                            <span style={{ fontWeight: 600 }}>{value}</span>
                         </div>
                     ))}
                 </div>

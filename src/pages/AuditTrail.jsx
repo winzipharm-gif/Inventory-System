@@ -5,12 +5,12 @@ import * as XLSX from 'xlsx';
 import { Shield, Search, Filter, RefreshCw, ChevronDown, ChevronUp, Download } from 'lucide-react';
 
 const ACTION_COLORS = {
-    ADD_PRODUCT: { bg: '#d1fae5', color: '#065f46', label: 'Add Product' },
-    UPDATE_PRODUCT: { bg: '#dbeafe', color: '#1e40af', label: 'Update Product' },
-    DELETE_PRODUCT: { bg: '#fee2e2', color: '#991b1b', label: 'Delete Product' },
-    ADD_SUPPLIER: { bg: '#d1fae5', color: '#065f46', label: 'Add Supplier' },
-    DELETE_SUPPLIER: { bg: '#fee2e2', color: '#991b1b', label: 'Delete Supplier' },
-    RECORD_SALE: { bg: '#ede9fe', color: '#5b21b6', label: 'Sale Recorded' },
+    ADD_PRODUCT: { bg: 'rgba(16, 185, 129, 0.12)', color: '#059669', label: 'Add Product' },
+    UPDATE_PRODUCT: { bg: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', label: 'Update Product' },
+    DELETE_PRODUCT: { bg: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', label: 'Delete Product' },
+    ADD_SUPPLIER: { bg: 'rgba(16, 185, 129, 0.12)', color: '#059669', label: 'Add Supplier' },
+    DELETE_SUPPLIER: { bg: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', label: 'Delete Supplier' },
+    RECORD_SALE: { bg: 'rgba(168, 85, 247, 0.12)', color: '#7c3aed', label: 'Sale Recorded' },
 };
 
 const AuditTrail = () => {
@@ -26,7 +26,7 @@ const AuditTrail = () => {
             .from('audit_log')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(1000); // Higher limit for export
+            .limit(1000);
         if (!error && data) setLogs(data);
         setLoading(false);
     }, []);
@@ -41,7 +41,6 @@ const AuditTrail = () => {
             ADD_SUPPLIER: 'Add Supplier', DELETE_SUPPLIER: 'Delete Supplier', RECORD_SALE: 'Sale Recorded'
         };
 
-        // Build rows
         const rows = logs.map(log => ({
             'Timestamp': new Date(log.created_at).toLocaleString('en-GB'),
             'User Email': log.user_email || 'Unknown',
@@ -53,8 +52,6 @@ const AuditTrail = () => {
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(rows);
-
-        // Auto-size columns
         const colWidths = [
             { wch: 22 }, { wch: 28 }, { wch: 18 }, { wch: 12 },
             { wch: 12 }, { wch: 55 }, { wch: 50 }
@@ -87,44 +84,43 @@ const AuditTrail = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-1)' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Shield size={22} color="var(--color-primary)" />
                         </div>
                         <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, margin: 0 }}>Audit Trail</h2>
                     </div>
-                    <p className="text-muted">Complete log of all system actions. Admin access only.</p>
+                    <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>Complete immutable log of all system actions and modifications.</p>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button onClick={handleDownloadXLSX} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
-                        <Download size={15} /> Download Excel
+                <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                    <button onClick={handleDownloadXLSX} className="btn btn-outline" style={{ minHeight: '40px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
+                        <Download size={16} /> Export Excel
                     </button>
-                    <button onClick={fetchLogs} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <RefreshCw size={15} /> Refresh
+                    <button onClick={fetchLogs} className="btn btn-outline" style={{ minHeight: '40px' }}>
+                        <RefreshCw size={16} /> Refresh
                     </button>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="card" style={{ padding: 'var(--space-4)' }}>
+            <div className="card" style={{ padding: 'var(--space-3)' }}>
                 <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-                        <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                    <div className="search-bar" style={{ flex: '1 1 240px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-surface)' }}>
+                        <Search size={18} className="text-muted" />
                         <input
-                            className="input-field"
-                            style={{ paddingLeft: '2.2rem' }}
+                            type="search"
                             placeholder="Search by user, action, or description..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                         />
                     </div>
-                    <div style={{ position: 'relative' }}>
-                        <Filter size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: '0 1 200px' }}>
+                        <Filter size={18} className="text-muted" />
                         <select
                             className="input-field"
-                            style={{ paddingLeft: '2rem', minWidth: 180 }}
+                            style={{ minHeight: '40px' }}
                             value={filterAction}
                             onChange={e => setFilterAction(e.target.value)}
                         >
@@ -137,16 +133,16 @@ const AuditTrail = () => {
             </div>
 
             {/* Stats strip */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'var(--space-3)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: 'var(--space-3)' }}>
                 {[
                     { label: 'Total Events', value: logs.length },
-                    { label: 'Sales', value: logs.filter(l => l.action === 'RECORD_SALE').length },
-                    { label: 'Products Added', value: logs.filter(l => l.action === 'ADD_PRODUCT').length },
+                    { label: 'Sales Logged', value: logs.filter(l => l.action === 'RECORD_SALE').length },
+                    { label: 'Items Added', value: logs.filter(l => l.action === 'ADD_PRODUCT').length },
                     { label: 'Items Deleted', value: logs.filter(l => l.action?.startsWith('DELETE')).length },
                 ].map(({ label, value }) => (
                     <div key={label} className="card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>{value}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2 }}>{label}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{value}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, fontWeight: 600 }}>{label}</div>
                     </div>
                 ))}
             </div>
@@ -154,17 +150,17 @@ const AuditTrail = () => {
             {/* Log Table */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontWeight: 600 }}>Activity Log</h3>
+                    <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-base)' }}>Activity Log</h3>
                     <span className="text-muted" style={{ fontSize: '0.85rem' }}>{filteredLogs.length} records</span>
                 </div>
 
                 {loading ? (
                     <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading audit logs...</div>
                 ) : filteredLogs.length === 0 ? (
-                    <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No audit records found.</div>
+                    <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No audit records found matching your filters.</div>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <div className="table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
                             <thead>
                                 <tr style={{ background: 'var(--color-bg-app)', borderBottom: '1px solid var(--color-border)' }}>
                                     {['Timestamp', 'User', 'Action', 'Description', 'Details'].map(h => (
@@ -182,11 +178,11 @@ const AuditTrail = () => {
                                                 <td style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', whiteSpace: 'nowrap', color: 'var(--color-text-muted)' }}>
                                                     {formatTime(log.created_at)}
                                                 </td>
-                                                <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem' }}>
+                                                <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', fontWeight: 500 }}>
                                                     {log.user_email || <span style={{ color: 'var(--color-text-muted)' }}>Unknown</span>}
                                                 </td>
                                                 <td style={{ padding: '0.75rem 1rem' }}>
-                                                    <span style={{ padding: '3px 10px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: actionStyle.bg, color: actionStyle.color }}>
+                                                    <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 700, background: actionStyle.bg, color: actionStyle.color, whiteSpace: 'nowrap' }}>
                                                         {actionStyle.label}
                                                     </span>
                                                 </td>
@@ -197,17 +193,17 @@ const AuditTrail = () => {
                                                     {log.details && (
                                                         <button
                                                             onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'var(--color-primary)', fontWeight: 600, background: 'var(--color-primary-light)', padding: '3px 10px', borderRadius: '999px' }}
+                                                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'var(--color-primary)', fontWeight: 600, background: 'var(--color-primary-light)', padding: '4px 10px', borderRadius: 'var(--radius-full)', cursor: 'pointer' }}
                                                         >
-                                                            {isExpanded ? <><ChevronUp size={13} /> Hide</> : <><ChevronDown size={13} /> View</>}
+                                                            {isExpanded ? <><ChevronUp size={14} /> Hide</> : <><ChevronDown size={14} /> View</>}
                                                         </button>
                                                     )}
                                                 </td>
                                             </tr>
                                             {isExpanded && log.details && (
                                                 <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-app)' }}>
-                                                    <td colSpan={5} style={{ padding: '0.5rem 1rem 1rem 1rem' }}>
-                                                        <pre style={{ fontFamily: 'monospace', fontSize: '0.8rem', background: 'var(--color-bg-surface)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', overflowX: 'auto', margin: 0, color: 'var(--color-text-main)' }}>
+                                                    <td colSpan={5} style={{ padding: '0.75rem 1rem 1rem 1rem' }}>
+                                                        <pre style={{ fontFamily: 'monospace', fontSize: '0.8rem', background: 'var(--color-bg-surface)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', overflowX: 'auto', margin: 0, color: 'var(--color-text-main)', border: '1px solid var(--color-border)' }}>
                                                             {JSON.stringify(log.details, null, 2)}
                                                         </pre>
                                                     </td>

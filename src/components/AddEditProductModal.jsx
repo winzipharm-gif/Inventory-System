@@ -64,27 +64,37 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
     };
 
     return (
-        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="card" style={{ width: '100%', maxWidth: '600px', padding: 0, animation: 'fadeIn 0.2s ease-out' }}>
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 1100 }}>
+            <div className="card" style={{ 
+                width: '100%', 
+                maxWidth: '580px', 
+                maxHeight: '90dvh',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 0, 
+                animation: 'fadeIn 0.2s ease-out',
+                overflow: 'hidden'
+            }}>
                 <div style={{
-                    padding: 'var(--space-4) var(--space-6)',
+                    padding: 'var(--space-4) var(--space-5)',
                     borderBottom: '1px solid var(--color-border)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    flexShrink: 0
                 }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                        {product ? 'Edit Product' : 'Add New Product'}
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
+                        {product ? 'Edit Medicine Details' : 'Add New Medicine'}
                     </h3>
-                    <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }}>
-                        <X size={24} />
+                    <button onClick={onClose} style={{ color: 'var(--color-text-muted)', padding: '4px' }} aria-label="Close modal">
+                        <X size={22} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ padding: 'var(--space-6)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Product Name</label>
+                <form onSubmit={handleSubmit} style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Brand / Product Name</label>
                             <input
                                 required
                                 className="input-field"
@@ -96,7 +106,7 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Generic Name</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Generic Name</label>
                             <input
                                 required
                                 className="input-field"
@@ -108,7 +118,7 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Category</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Category</label>
                             <select
                                 required
                                 className="input-field"
@@ -124,7 +134,7 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Unit</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Dispensing Unit</label>
                             <select
                                 required
                                 className="input-field"
@@ -139,10 +149,11 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Current Stock</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Current Stock Quantity</label>
                             <input
                                 required
                                 type="number"
+                                min="0"
                                 className="input-field"
                                 name="stock"
                                 value={formData.stock}
@@ -151,10 +162,11 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Min. Stock Level</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Min. Stock Alert Level</label>
                             <input
                                 required
                                 type="number"
+                                min="0"
                                 className="input-field"
                                 name="minStock"
                                 value={formData.minStock}
@@ -163,11 +175,12 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Price ($)</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Price (₵)</label>
                             <input
                                 required
                                 type="number"
                                 step="0.01"
+                                min="0"
                                 className="input-field"
                                 name="price"
                                 value={formData.price}
@@ -176,7 +189,7 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Expiry Date</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Expiry Date</label>
                             <input
                                 required
                                 type="date"
@@ -188,9 +201,9 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)', marginTop: 'var(--space-6)' }}>
-                        <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn btn-primary">{product ? 'Update Details' : 'Save Product'}</button>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)', marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
+                        <button type="button" className="btn btn-outline" style={{ minHeight: '42px' }} onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" style={{ minHeight: '42px', fontWeight: 700 }}>{product ? 'Update Details' : 'Save Medicine'}</button>
                     </div>
                 </form>
             </div>

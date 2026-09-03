@@ -1,9 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, FileText, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, FileText, LogOut, Shield, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import logo from '../assets/logo.png';
 
-const Sidebar = () => {
+const Sidebar = ({ closeSidebar }) => {
     const { user, profile, isAdmin, signOut } = useAuth();
     const navigate = useNavigate();
 
@@ -29,19 +29,33 @@ const Sidebar = () => {
         }
     };
 
+    const handleNavClick = () => {
+        if (closeSidebar) closeSidebar();
+    };
+
     return (
         <aside className="sidebar">
             <div className="sidebar-header">
                 <div className="logo-container">
                     <img src={logo} alt="Winzi Pharmacy Logo" className="logo-img" />
                 </div>
+                {closeSidebar && (
+                    <button 
+                        className="sidebar-close-btn" 
+                        onClick={closeSidebar}
+                        aria-label="Close menu"
+                    >
+                        <X size={22} />
+                    </button>
+                )}
             </div>
 
-            <nav className="sidebar-nav">
+            <nav className="sidebar-nav" aria-label="Main Navigation">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
+                        onClick={handleNavClick}
                         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                     >
                         <item.icon size={20} />
@@ -66,10 +80,11 @@ const Sidebar = () => {
                     style={{
                         width: '100%',
                         cursor: 'pointer',
-                        color: 'var(--color-error)'
+                        color: 'var(--color-error)',
+                        borderColor: 'rgba(239, 68, 68, 0.2)'
                     }}
                 >
-                    <LogOut size={20} />
+                    <LogOut size={18} />
                     <span>Logout</span>
                 </button>
             </div>
