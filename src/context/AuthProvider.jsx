@@ -33,10 +33,17 @@ export const AuthProvider = ({ children }) => {
                     await new Promise((res) => setTimeout(res, delayMs));
                 } else {
                     console.error('Auth: Could not fetch profile after retries:', error?.message);
+                    const fallback = { id: userId, role: 'user', error: true };
+                    if (isMounted.current) setProfile(fallback);
+                    return fallback;
                 }
             } catch (err) {
                 console.error('Unexpected error in fetchProfile:', err);
-                if (attempt === retries) return null;
+                if (attempt === retries) {
+                    const fallback = { id: userId, role: 'user', error: true };
+                    if (isMounted.current) setProfile(fallback);
+                    return fallback;
+                }
                 await new Promise((res) => setTimeout(res, delayMs));
             }
         }
