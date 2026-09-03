@@ -86,6 +86,12 @@ export const AuthProvider = ({ children }) => {
             if (event === 'INITIAL_SESSION') return;
 
             const currentUser = session?.user ?? null;
+
+            // Set loading while we resolve the profile so that
+            // ProtectedRoute shows a spinner instead of bouncing
+            // admins to /sales before their role is known.
+            if (isMounted.current) setLoading(true);
+
             setUser(currentUser);
 
             if (currentUser) {
@@ -93,6 +99,8 @@ export const AuthProvider = ({ children }) => {
             } else {
                 setProfile(null);
             }
+
+            if (isMounted.current) setLoading(false);
         });
 
         return () => {

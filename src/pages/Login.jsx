@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../utils/supabaseClient';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -12,17 +13,38 @@ const Login = () => {
     const { signIn } = useAuth();
     const navigate = useNavigate();
 
+    /**
+     * After sign-in succeeds, fetch the profile directly (with retries)
+     * so we know the user's role BEFORE navigating.  This avoids the race
+     * where AuthProvider's onAuthStateChange hasn't resolved yet.
+     */
+    const waitForProfile = async (userId, retries = 6, delayMs = 500) => {
+        for (let i = 1; i <= retries; i++) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+            if (data?.role) return data;
+            if (i < retries) await new Promise(r => setTimeout(r, delayMs));
+        }
+        return null;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setIsSubmitting(true);
 
         try {
-            const { error } = await signIn(email, password);
+            const { data, error } = await signIn(email, password);
             if (error) {
                 setError(error.message);
             } else {
-                navigate('/sales');
+                // Wait for the profile to exist so we can route by role
+                const profile = await waitForProfile(data?.user?.id);
+                const isAdmin = profile?.role === 'admin';
+                navigate(isAdmin ? '/' : '/sales', { replace: true });
             }
         } catch (err) {
             setError('An unexpected error occurred. Please try again.');

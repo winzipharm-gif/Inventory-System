@@ -32,12 +32,12 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 };
 
 const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) return null;
 
   if (user) {
-    return <Navigate to="/sales" replace />;
+    return <Navigate to={isAdmin ? '/' : '/sales'} replace />;
   }
 
   return children;
