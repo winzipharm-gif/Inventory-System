@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 };
 
 /**
@@ -65,13 +66,17 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ── DELETE USER ──────────────────────────────────────────────
-    if (req.method === 'DELETE') {
-      const authResult = await verifyAdmin(req);
-      if (authResult instanceof Response) return authResult;
-      const callerUser = authResult;
+    // Verify admin for all operations
+    const authResult = await verifyAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const callerUser = authResult;
 
-      const { userId } = await req.json();
+    const body = await req.json();
+    const { action } = body;
+
+    // ── DELETE USER ──────────────────────────────────────────────
+    if (action === 'delete' || req.method === 'DELETE') {
+      const { userId } = body;
       if (!userId) {
         return new Response(JSON.stringify({ error: 'userId is required.' }), {
           status: 400,
@@ -109,11 +114,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── CREATE USER (POST) ──────────────────────────────────────
-    const authResult = await verifyAdmin(req);
-    if (authResult instanceof Response) return authResult;
-
-    const { email, password, role } = await req.json();
+    // ── CREATE USER (default POST) ──────────────────────────────
+    const { email, password, role } = body;
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Email and password are required.' }), {
         status: 400,

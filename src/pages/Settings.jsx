@@ -81,12 +81,12 @@ const Settings = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
-                method: 'DELETE',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({ userId })
+                body: JSON.stringify({ action: 'delete', userId })
             });
             const result = await res.json();
             if (!res.ok) {
