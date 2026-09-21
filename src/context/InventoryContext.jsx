@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../utils/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
 import { logAudit } from '../utils/auditLog';
+import { exportInventoryToExcel, parseExcelImport } from '../utils/excelUtils';
 
 const InventoryContext = createContext();
 
@@ -345,6 +346,48 @@ export const InventoryProvider = ({ children }) => {
         await updateAppSettings({ business_contact: contact });
     };
 
+    const exportToExcel = () => {
+        exportInventoryToExcel(inventory);
+    };
+
+    const importFromExcel = async (file) => {
+        try {
+            const parsedData = await parseExcelImport(file);
+            if (!parsedData || parsedData.length === 0) return { success: false, error: 'No data found in file.' };
+
+            const insertPayloads = parsedData.map(product => ({
+                name: product.name,
+                generic_name: product.genericName,
+                category: product.category,
+                stock: product.stock,
+                unit: product.unit || 'pcs',
+                price: product.price,
+                expiry_date: product.expiryDate || null,
+                received_date: product.receivedDate || new Date().toISOString().split('T')[0],
+                min_stock: product.minStock
+            }));
+
+            const { error } = await supabase.from('inventory').insert(insertPayloads);
+            if (error) {
+                console.error('Import error:', error);
+                return { success: false, error: error.message };
+            }
+
+            logAudit({
+                action: 'BULK_IMPORT',
+                entity: 'inventory',
+                description: `Imported ${parsedData.length} medicines from Excel`
+            }).catch(() => {});
+
+            // Use the individual fetch function to just refresh the inventory table 
+            fetchInventory(); 
+            return { success: true };
+        } catch (err) {
+            console.error('File parsing error:', err);
+            return { success: false, error: 'Failed to parse Excel file. Please ensure it matches the template.' };
+        }
+    };
+
     const recordSale = async (saleItems, buyerDetails) => {
         const total = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
@@ -441,6 +484,8 @@ export const InventoryProvider = ({ children }) => {
         deleteUnit,
         updateUnit,
         setBusinessContact: updateBusinessContact,
+        exportToExcel,
+        importFromExcel
     };
 
     return (

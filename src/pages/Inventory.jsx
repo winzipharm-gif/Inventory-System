@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { Plus, Edit2, Trash2, Search, SlidersHorizontal, Download, Upload, Tag } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { Plus, Edit2, Trash2, Search, SlidersHorizontal, Download, Upload, Tag, AlertTriangle } from 'lucide-react';
 import AddEditProductModal from '../components/AddEditProductModal';
 import ManageMetadataModal from '../components/ManageMetadataModal';
 
 const Inventory = () => {
-    const { inventory, deleteProduct, categories, exportToCSV, importFromCSV } = useInventory();
+    const { inventory, deleteProduct, categories, exportToExcel, importFromExcel } = useInventory();
+    const { isAdmin } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMetaModalOpen, setIsMetaModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+
+    const nameCounts = useMemo(() => {
+        return inventory.reduce((acc, item) => {
+            const nameKey = (item.name || '').toLowerCase();
+            acc[nameKey] = (acc[nameKey] || 0) + 1;
+            return acc;
+        }, {});
+    }, [inventory]);
 
     const filteredInventory = inventory.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -29,11 +39,15 @@ const Inventory = () => {
         setIsModalOpen(true);
     };
 
-    const handleFileImport = (e) => {
+    const handleFileImport = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            importFromCSV(file);
+            const res = await importFromExcel(file);
+            if (!res.success) {
+                alert(res.error);
+            }
         }
+        e.target.value = null; // Reset input
     };
 
     return (
@@ -48,13 +62,17 @@ const Inventory = () => {
                     <button className="btn btn-outline" style={{ minHeight: '40px' }} onClick={() => setIsMetaModalOpen(true)}>
                         <Tag size={18} /> Manage Labels
                     </button>
-                    <button className="btn btn-outline" style={{ minHeight: '40px' }} onClick={exportToCSV}>
-                        <Download size={18} /> Export
-                    </button>
-                    <label className="btn btn-outline" style={{ cursor: 'pointer', minHeight: '40px', margin: 0 }}>
-                        <Upload size={18} /> Import
-                        <input type="file" accept=".csv" onChange={handleFileImport} style={{ display: 'none' }} />
-                    </label>
+                    {isAdmin && (
+                        <>
+                            <button className="btn btn-outline" style={{ minHeight: '40px' }} onClick={exportToExcel}>
+                                <Download size={18} /> Export
+                            </button>
+                            <label className="btn btn-outline" style={{ cursor: 'pointer', minHeight: '40px', margin: 0 }}>
+                                <Upload size={18} /> Import
+                                <input type="file" accept=".xlsx, .xls" onChange={handleFileImport} style={{ display: 'none' }} />
+                            </label>
+                        </>
+                    )}
                     <button className="btn btn-primary" style={{ minHeight: '40px' }} onClick={handleAdd}>
                         <Plus size={18} /> Add Medicine
                     </button>
@@ -108,18 +126,23 @@ const Inventory = () => {
                         <tbody>
                             {filteredInventory.map((product) => {
                                 const isLowStock = product.stock <= product.minStock;
+                                const isDuplicate = nameCounts[(product.name || '').toLowerCase()] > 1;
                                 return (
                                     <tr
                                         key={product.id}
                                         style={{
                                             borderBottom: '1px solid var(--color-border)',
-                                            transition: 'background-color var(--transition-fast)'
+                                            transition: 'background-color var(--transition-fast)',
+                                            backgroundColor: isDuplicate ? 'rgba(245, 158, 11, 0.05)' : 'transparent'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-app)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDuplicate ? 'rgba(245, 158, 11, 0.1)' : 'var(--color-bg-app)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDuplicate ? 'rgba(245, 158, 11, 0.05)' : 'transparent'}
                                     >
                                         <td style={{ padding: '0.85rem 1rem' }}>
-                                            <div style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>{product.name}</div>
+                                            <div style={{ fontWeight: 600, color: isDuplicate ? 'var(--color-warning)' : 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                {product.name}
+                                                {isDuplicate && <AlertTriangle size={14} color="var(--color-warning)" title="Duplicate Item" />}
+                                            </div>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{product.genericName}</div>
                                         </td>
                                         <td style={{ padding: '0.85rem 1rem', color: 'var(--color-text-muted)' }}>{product.category}</td>
