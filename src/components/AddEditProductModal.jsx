@@ -5,6 +5,8 @@ import { X } from 'lucide-react';
 
 const AddEditProductModal = ({ isOpen, onClose, product }) => {
     const { addProduct, updateProduct, categories, units } = useInventory();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         genericName: '',
@@ -17,6 +19,7 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
     });
 
     useEffect(() => {
+        setErrorMsg('');
         if (product) {
             setFormData({
                 ...product,
@@ -38,24 +41,32 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setErrorMsg('');
+
+        let res;
+        const payload = {
+            ...formData,
+            stock: Number(formData.stock),
+            minStock: Number(formData.minStock),
+            price: Number(formData.price)
+        };
+
         if (product) {
-            updateProduct(product.id, {
-                ...formData,
-                stock: Number(formData.stock),
-                minStock: Number(formData.minStock),
-                price: Number(formData.price)
-            });
+            res = await updateProduct(product.id, payload);
         } else {
-            addProduct({
-                ...formData,
-                stock: Number(formData.stock),
-                minStock: Number(formData.minStock),
-                price: Number(formData.price)
-            });
+            res = await addProduct(payload);
         }
-        onClose();
+
+        setIsSubmitting(false);
+
+        if (res && res.success) {
+            onClose();
+        } else {
+            setErrorMsg(res?.error || 'Failed to save medicine. Please check your network or try again.');
+        }
     };
 
     const handleChange = (e) => {
@@ -92,6 +103,20 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+                    {errorMsg && (
+                        <div style={{
+                            padding: 'var(--space-3) var(--space-4)',
+                            marginBottom: 'var(--space-4)',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                            border: '1px solid var(--color-error)',
+                            color: 'var(--color-error)',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 600
+                        }}>
+                            {errorMsg}
+                        </div>
+                    )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
                         <div style={{ gridColumn: '1 / -1' }}>
                             <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Brand / Product Name</label>
@@ -202,8 +227,10 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)', marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
-                        <button type="button" className="btn btn-outline" style={{ minHeight: '42px' }} onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" style={{ minHeight: '42px', fontWeight: 700 }}>{product ? 'Update Details' : 'Save Medicine'}</button>
+                        <button type="button" className="btn btn-outline" style={{ minHeight: '42px' }} onClick={onClose} disabled={isSubmitting}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" style={{ minHeight: '42px', fontWeight: 700 }} disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : (product ? 'Update Details' : 'Save Medicine')}
+                        </button>
                     </div>
                 </form>
             </div>

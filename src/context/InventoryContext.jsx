@@ -20,8 +20,20 @@ export const InventoryProvider = ({ children }) => {
 
     // Individual fetch functions so realtime events only refresh affected data
     const fetchInventory = useCallback(async () => {
-        const { data: invData } = await supabase.from('inventory').select('*').order('name');
-        if (invData) setInventory(invData.map(i => ({ ...i, genericName: i.generic_name, expiryDate: i.expiry_date, receivedDate: i.received_date, minStock: i.min_stock })));
+        const { data: invData, error } = await supabase.from('inventory').select('*').order('name');
+        if (error) {
+            console.error('Error fetching inventory:', error);
+            return;
+        }
+        if (invData) {
+            setInventory(invData.map(i => ({
+                ...i,
+                genericName: i.generic_name || '',
+                expiryDate: i.expiry_date || '',
+                receivedDate: i.received_date || '',
+                minStock: i.min_stock ?? 10
+            })));
+        }
     }, []);
 
     const fetchSuppliers = useCallback(async () => {
@@ -124,12 +136,14 @@ export const InventoryProvider = ({ children }) => {
             min_stock: product.minStock
         }]).select();
         
-        if (!error && data) {
-            fetchData();
+        if (!error && data && data.length > 0) {
+            await fetchInventory();
             logAudit({ action: 'ADD_PRODUCT', entity: 'inventory', entityId: data[0]?.id, description: `Added product "${product.name}"`, details: product });
+            return { success: true, data: data[0] };
         } else {
             console.error('Error adding product:', error);
-            alert(`Failed to add product: ${error.message || JSON.stringify(error)}`);
+            const msg = error?.message || 'Failed to add product to database';
+            return { success: false, error: msg };
         }
     };
 
@@ -144,10 +158,14 @@ export const InventoryProvider = ({ children }) => {
         if (updatedProduct.expiryDate) payload.expiry_date = updatedProduct.expiryDate;
         if (updatedProduct.minStock !== undefined) payload.min_stock = updatedProduct.minStock;
 
-        const { error } = await supabase.from('inventory').update(payload).eq('id', id);
+        const { data, error } = await supabase.from('inventory').update(payload).eq('id', id).select();
         if (!error) {
-            fetchData();
+            await fetchInventory();
             logAudit({ action: 'UPDATE_PRODUCT', entity: 'inventory', entityId: id, description: `Updated product (ID: ${id})`, details: payload });
+            return { success: true, data };
+        } else {
+            console.error('Error updating product:', error);
+            return { success: false, error: error?.message || 'Failed to update product' };
         }
     };
 
