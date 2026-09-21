@@ -20,20 +20,40 @@ export const InventoryProvider = ({ children }) => {
 
     // Individual fetch functions so realtime events only refresh affected data
     const fetchInventory = useCallback(async () => {
-        const { data: invData, error } = await supabase.from('inventory').select('*').order('name');
-        if (error) {
-            console.error('Error fetching inventory:', error);
-            return;
+        let allData = [];
+        let from = 0;
+        let step = 999;
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data: invData, error } = await supabase.from('inventory')
+                .select('*')
+                .order('name')
+                .range(from, from + step);
+                
+            if (error) {
+                console.error('Error fetching inventory:', error);
+                break;
+            }
+            if (invData && invData.length > 0) {
+                allData = [...allData, ...invData];
+                if (invData.length <= step) {
+                    hasMore = false;
+                } else {
+                    from += (step + 1);
+                }
+            } else {
+                hasMore = false;
+            }
         }
-        if (invData) {
-            setInventory(invData.map(i => ({
-                ...i,
-                genericName: i.generic_name || '',
-                expiryDate: i.expiry_date || '',
-                receivedDate: i.received_date || '',
-                minStock: i.min_stock ?? 10
-            })));
-        }
+
+        setInventory(allData.map(i => ({
+            ...i,
+            genericName: i.generic_name || '',
+            expiryDate: i.expiry_date || '',
+            receivedDate: i.received_date || '',
+            minStock: i.min_stock ?? 10
+        })));
     }, []);
 
     const fetchSuppliers = useCallback(async () => {
@@ -42,7 +62,7 @@ export const InventoryProvider = ({ children }) => {
     }, []);
 
     const fetchSales = useCallback(async () => {
-        const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false });
+        const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false }).limit(150);
         if (salesData) {
             const mappedSales = salesData.map(s => ({
                 id: s.id,
@@ -112,16 +132,40 @@ export const InventoryProvider = ({ children }) => {
         
         fetchData();
         
-        // Listen for realtime changes — only refetch the affected table
+        // Listen for realtime changes and apply incremental updates
         const channel = supabase.channel('schema-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, fetchInventory)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, fetchSales)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventory' }, (payload) => {
+                setInventory(prev => {
+                    if (prev.some(i => i.id === payload.new.id)) return prev;
+                    const newItem = {
+                        ...payload.new,
+                        genericName: payload.new.generic_name || '',
+                        expiryDate: payload.new.expiry_date || '',
+                        receivedDate: payload.new.received_date || '',
+                        minStock: payload.new.min_stock ?? 10
+                    };
+                    return [...prev, newItem].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                });
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, (payload) => {
+                setInventory(prev => prev.map(i => i.id === payload.new.id ? {
+                    ...i,
+                    ...payload.new,
+                    genericName: payload.new.generic_name || '',
+                    expiryDate: payload.new.expiry_date || '',
+                    receivedDate: payload.new.received_date || '',
+                    minStock: payload.new.min_stock ?? 10
+                } : i));
+            })
+            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'inventory' }, (payload) => {
+                setInventory(prev => prev.filter(i => i.id !== payload.old.id));
+            })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [fetchData, fetchInventory, fetchSales, userId, authLoading]);
+    }, [fetchData, userId, authLoading]);
 
     const addProduct = async (product) => {
         const insertPayload = {
@@ -372,7 +416,6 @@ export const InventoryProvider = ({ children }) => {
             return invItem;
         }));
 
-        fetchData(); // Sync with remote
         return newSale;
     };
 
