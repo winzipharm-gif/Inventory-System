@@ -11,7 +11,8 @@ import { supabase } from './supabaseClient';
  */
 export const logAudit = async ({ action, entity, entityId = null, description, details = null }) => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
         if (!user) return;
 
         await supabase.from('audit_log').insert([{

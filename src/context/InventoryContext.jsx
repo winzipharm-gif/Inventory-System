@@ -124,7 +124,7 @@ export const InventoryProvider = ({ children }) => {
     }, [fetchData, fetchInventory, fetchSales, userId, authLoading]);
 
     const addProduct = async (product) => {
-        const { data, error } = await supabase.from('inventory').insert([{
+        const insertPayload = {
             name: product.name,
             generic_name: product.genericName,
             category: product.category,
@@ -134,12 +134,35 @@ export const InventoryProvider = ({ children }) => {
             expiry_date: product.expiryDate,
             received_date: product.receivedDate || new Date().toISOString().split('T')[0],
             min_stock: product.minStock
-        }]).select();
+        };
+
+        const { data, error } = await supabase.from('inventory').insert([insertPayload]).select();
         
         if (!error && data && data.length > 0) {
-            await fetchInventory();
-            logAudit({ action: 'ADD_PRODUCT', entity: 'inventory', entityId: data[0]?.id, description: `Added product "${product.name}"`, details: product });
-            return { success: true, data: data[0] };
+            const savedItem = {
+                ...data[0],
+                genericName: data[0].generic_name || '',
+                expiryDate: data[0].expiry_date || '',
+                receivedDate: data[0].received_date || '',
+                minStock: data[0].min_stock ?? 10
+            };
+
+            // Direct local state update: instant UI response, zero wait time for a re-fetch
+            setInventory(prev => {
+                const filtered = prev.filter(item => item.id !== savedItem.id);
+                return [...filtered, savedItem].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            });
+
+            // Fire-and-forget audit log in the background
+            logAudit({
+                action: 'ADD_PRODUCT',
+                entity: 'inventory',
+                entityId: savedItem.id,
+                description: `Added product "${product.name}"`,
+                details: product
+            }).catch(() => {});
+
+            return { success: true, data: savedItem };
         } else {
             console.error('Error adding product:', error);
             const msg = error?.message || 'Failed to add product to database';
@@ -159,10 +182,27 @@ export const InventoryProvider = ({ children }) => {
         if (updatedProduct.minStock !== undefined) payload.min_stock = updatedProduct.minStock;
 
         const { data, error } = await supabase.from('inventory').update(payload).eq('id', id).select();
-        if (!error) {
-            await fetchInventory();
-            logAudit({ action: 'UPDATE_PRODUCT', entity: 'inventory', entityId: id, description: `Updated product (ID: ${id})`, details: payload });
-            return { success: true, data };
+        if (!error && data && data.length > 0) {
+            const updatedItem = {
+                ...data[0],
+                genericName: data[0].generic_name || '',
+                expiryDate: data[0].expiry_date || '',
+                receivedDate: data[0].received_date || '',
+                minStock: data[0].min_stock ?? 10
+            };
+
+            // Instant UI update
+            setInventory(prev => prev.map(item => item.id === id ? updatedItem : item));
+
+            logAudit({
+                action: 'UPDATE_PRODUCT',
+                entity: 'inventory',
+                entityId: id,
+                description: `Updated product (ID: ${id})`,
+                details: payload
+            }).catch(() => {});
+
+            return { success: true, data: updatedItem };
         } else {
             console.error('Error updating product:', error);
             return { success: false, error: error?.message || 'Failed to update product' };
@@ -171,10 +211,19 @@ export const InventoryProvider = ({ children }) => {
 
     const deleteProduct = async (id) => {
         const item = inventory.find(i => i.id === id);
+        // Optimistic UI delete: remove from list immediately
+        setInventory(prev => prev.filter(i => i.id !== id));
         const { error } = await supabase.from('inventory').delete().eq('id', id);
-        if (!error) {
-            fetchData();
-            logAudit({ action: 'DELETE_PRODUCT', entity: 'inventory', entityId: id, description: `Deleted product "${item?.name || id}"` });
+        if (error) {
+            console.error('Error deleting product:', error);
+            fetchInventory(); // Revert back on failure
+        } else {
+            logAudit({
+                action: 'DELETE_PRODUCT',
+                entity: 'inventory',
+                entityId: id,
+                description: `Deleted product "${item?.name || id}"`
+            }).catch(() => {});
         }
     };
 
