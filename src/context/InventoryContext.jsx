@@ -129,6 +129,7 @@ export const InventoryProvider = ({ children }) => {
             logAudit({ action: 'ADD_PRODUCT', entity: 'inventory', entityId: data[0]?.id, description: `Added product "${product.name}"`, details: product });
         } else {
             console.error('Error adding product:', error);
+            alert(`Failed to add product: ${error.message || JSON.stringify(error)}`);
         }
     };
 
