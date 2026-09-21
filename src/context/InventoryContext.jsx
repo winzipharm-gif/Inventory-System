@@ -18,53 +18,66 @@ export const InventoryProvider = ({ children }) => {
     const [businessContact, setBusinessContact] = useState({});
     const [loading, setLoading] = useState(true);
 
+    // Individual fetch functions so realtime events only refresh affected data
+    const fetchInventory = useCallback(async () => {
+        const { data: invData } = await supabase.from('inventory').select('*').order('name');
+        if (invData) setInventory(invData.map(i => ({ ...i, genericName: i.generic_name, expiryDate: i.expiry_date, receivedDate: i.received_date, minStock: i.min_stock })));
+    }, []);
+
+    const fetchSuppliers = useCallback(async () => {
+        const { data: supData } = await supabase.from('suppliers').select('*').order('name');
+        if (supData) setSuppliers(supData);
+    }, []);
+
+    const fetchSales = useCallback(async () => {
+        const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false });
+        if (salesData) {
+            const mappedSales = salesData.map(s => ({
+                id: s.id,
+                date: s.date,
+                total: Number(s.total),
+                items: s.items_count,
+                details: s.sale_items.map(si => ({
+                    productId: si.product_id,
+                    name: si.product_name,
+                    quantity: si.quantity,
+                    price: Number(si.price)
+                })),
+                buyerDetails: s.buyer_details
+            }));
+            setSales(mappedSales);
+            setInvoices(mappedSales);
+        }
+    }, []);
+
+    const fetchSettings = useCallback(async () => {
+        const { data: settingsData, error: settingsError } = await supabase.from('app_settings').select('*').maybeSingle();
+        if (settingsError) {
+            console.error('App settings fetch error:', settingsError);
+        }
+        if (settingsData) {
+            setCategories(settingsData.categories || []);
+            setUnits(settingsData.units || []);
+            setBusinessContact(settingsData.business_contact || {});
+        }
+    }, []);
+
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            // Fetch Inventory
-            const { data: invData } = await supabase.from('inventory').select('*').order('name');
-            if (invData) setInventory(invData.map(i => ({ ...i, genericName: i.generic_name, expiryDate: i.expiry_date, receivedDate: i.received_date, minStock: i.min_stock })));
-
-            // Fetch Suppliers
-            const { data: supData } = await supabase.from('suppliers').select('*').order('name');
-            if (supData) setSuppliers(supData);
-
-            // Fetch Sales
-            const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false });
-            if (salesData) {
-                const mappedSales = salesData.map(s => ({
-                    id: s.id,
-                    date: s.date,
-                    total: Number(s.total),
-                    items: s.items_count,
-                    details: s.sale_items.map(si => ({
-                        productId: si.product_id,
-                        name: si.product_name,
-                        quantity: si.quantity,
-                        price: Number(si.price)
-                    })),
-                    buyerDetails: s.buyer_details
-                }));
-                setSales(mappedSales);
-                setInvoices(mappedSales);
-            }
-
-            // Fetch App Settings
-            const { data: settingsData, error: settingsError } = await supabase.from('app_settings').select('*').maybeSingle();
-            if (settingsError) {
-                console.error('App settings fetch error:', settingsError);
-            }
-            if (settingsData) {
-                setCategories(settingsData.categories || []);
-                setUnits(settingsData.units || []);
-                setBusinessContact(settingsData.business_contact || {});
-            }
+            // Fetch all data in parallel instead of sequentially
+            await Promise.all([
+                fetchInventory(),
+                fetchSuppliers(),
+                fetchSales(),
+                fetchSettings(),
+            ]);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [fetchInventory, fetchSuppliers, fetchSales, fetchSettings]);
 
     const { user, loading: authLoading } = useAuth();
     const userId = user?.id;
@@ -87,16 +100,16 @@ export const InventoryProvider = ({ children }) => {
         
         fetchData();
         
-        // Listen for realtime changes
+        // Listen for realtime changes — only refetch the affected table
         const channel = supabase.channel('schema-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, fetchData)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, fetchData)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, fetchInventory)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, fetchSales)
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [fetchData, userId, authLoading]);
+    }, [fetchData, fetchInventory, fetchSales, userId, authLoading]);
 
     const addProduct = async (product) => {
         const { data, error } = await supabase.from('inventory').insert([{

@@ -16,7 +16,7 @@ const Settings = () => {
 
     // User management state
     const [users, setUsers] = useState([]);
-    const [newUserForm, setNewUserForm] = useState({ email: '', password: '', role: 'user' });
+    const [newUserForm, setNewUserForm] = useState({ full_name: '', email: '', password: '', role: 'user' });
     const [userFormError, setUserFormError] = useState('');
     const [userFormSuccess, setUserFormSuccess] = useState('');
     const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -40,8 +40,8 @@ const Settings = () => {
         e.preventDefault();
         setUserFormError('');
         setUserFormSuccess('');
-        if (!newUserForm.email || !newUserForm.password) {
-            setUserFormError('Email and password are required.');
+        if (!newUserForm.full_name || !newUserForm.email || !newUserForm.password) {
+            setUserFormError('Full name, email, and password are required.');
             return;
         }
         setIsCreatingUser(true);
@@ -63,8 +63,8 @@ const Settings = () => {
             if (!res.ok) {
                 setUserFormError(result.error || 'Failed to create user.');
             } else {
-                setUserFormSuccess(`✓ User "${newUserForm.email}" created successfully!`);
-                setNewUserForm({ email: '', password: '', role: 'user' });
+                setUserFormSuccess(`✓ User "${newUserForm.full_name}" (${newUserForm.email}) created successfully!`);
+                setNewUserForm({ full_name: '', email: '', password: '', role: 'user' });
                 await fetchUsers();
             }
         } catch {
@@ -291,6 +291,17 @@ const Settings = () => {
                     <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', padding: 'var(--space-4)', background: 'var(--color-bg-app)', borderRadius: 'var(--radius-md)' }}>
                         <h4 style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create New Account</h4>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--space-3)' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Full Name</label>
+                                <input
+                                    className="input-field"
+                                    type="text"
+                                    placeholder="e.g. John Doe"
+                                    value={newUserForm.full_name}
+                                    onChange={(e) => setNewUserForm(f => ({ ...f, full_name: e.target.value }))}
+                                    required
+                                />
+                            </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-1)', color: 'var(--color-text-muted)' }}>Email Address</label>
                                 <input

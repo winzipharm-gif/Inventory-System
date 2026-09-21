@@ -115,7 +115,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── CREATE USER (default POST) ──────────────────────────────
-    const { email, password, role } = body;
+    const { email, password, role, full_name } = body;
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Email and password are required.' }), {
         status: 400,
@@ -131,7 +131,7 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true, // Auto-confirm so the user can log in immediately
-      user_metadata: { role: validRole },
+      user_metadata: { role: validRole, full_name: full_name || email.split('@')[0] },
     });
 
     if (createError) {
@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
     if (newUser?.user) {
       await adminClient.from('profiles').upsert({
         id: newUser.user.id,
-        full_name: email.split('@')[0],
+        full_name: full_name || email.split('@')[0],
         role: validRole,
       });
     }

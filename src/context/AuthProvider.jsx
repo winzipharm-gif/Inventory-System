@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const isMounted = useRef(true);
+    const signingOut = useRef(false);
 
     const getInitialProfileFromUser = (u) => {
         if (!u) return null;
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!isMounted.current) return;
 
-            if (event === 'SIGNED_OUT') {
+            if (event === 'SIGNED_OUT' || signingOut.current) {
                 setUser(null);
                 setProfile(null);
                 setLoading(false);
@@ -113,15 +114,19 @@ export const AuthProvider = ({ children }) => {
     }, [fetchProfile]);
 
     const signOut = useCallback(async () => {
+        // Immediately clear state so the UI redirects right away
+        signingOut.current = true;
+        setUser(null);
+        setProfile(null);
         try {
-            const { error } = await supabase.auth.signOut();
-            setUser(null);
-            setProfile(null);
+            // scope: 'local' clears the session locally without a network call,
+            // so logout always works even with poor connectivity
+            const { error } = await supabase.auth.signOut({ scope: 'local' });
             return { error };
         } catch (err) {
-            setUser(null);
-            setProfile(null);
             return { error: err };
+        } finally {
+            signingOut.current = false;
         }
     }, []);
 
