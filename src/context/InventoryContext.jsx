@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../utils/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
 import { logAudit } from '../utils/auditLog';
-import { exportInventoryToExcel, parseExcelImport } from '../utils/excelUtils';
+import { exportInventoryToExcel, parseExcelImport, downloadImportTemplate } from '../utils/excelUtils';
 
 const InventoryContext = createContext();
 
@@ -485,7 +485,8 @@ export const InventoryProvider = ({ children }) => {
         updateUnit,
         setBusinessContact: updateBusinessContact,
         exportToExcel,
-        importFromExcel
+        importFromExcel,
+        downloadImportTemplate
     };
 
     return (

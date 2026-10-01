@@ -28,6 +28,31 @@ export const exportInventoryToExcel = (inventory) => {
 };
 
 /**
+ * Generates and downloads an empty Excel template for importing inventory.
+ */
+export const downloadImportTemplate = () => {
+    const templateData = [
+        {
+            'Brand / Product Name': 'Example Brand',
+            'Generic Name': 'Example Generic',
+            'Category': 'Tablet',
+            'Dispensing Unit': 'pcs',
+            'Stock': 100,
+            'Min Stock Alert': 10,
+            'Price (₵)': 5.50,
+            'Expiry Date': '2025-12-31',
+            'Received Date': '2024-01-01'
+        }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
+
+    XLSX.writeFile(workbook, 'Inventory_Import_Template.xlsx');
+};
+
+/**
  * Parses an uploaded Excel file (.xlsx or .xls) and maps its rows to an array of product payload objects.
  * @param {File} file - The file uploaded via input.
  * @returns {Promise<Array>} A promise that resolves to an array of product objects ready for insertion.

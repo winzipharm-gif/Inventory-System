@@ -6,7 +6,7 @@ import AddEditProductModal from '../components/AddEditProductModal';
 import ManageMetadataModal from '../components/ManageMetadataModal';
 
 const Inventory = () => {
-    const { inventory, deleteProduct, categories, exportToExcel, importFromExcel } = useInventory();
+    const { inventory, deleteProduct, categories, exportToExcel, importFromExcel, downloadImportTemplate } = useInventory();
     const { isAdmin } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -66,6 +66,9 @@ const Inventory = () => {
                         <>
                             <button className="btn btn-outline" style={{ minHeight: '40px' }} onClick={exportToExcel}>
                                 <Download size={18} /> Export
+                            </button>
+                            <button className="btn btn-outline" style={{ minHeight: '40px' }} onClick={downloadImportTemplate} title="Download Import Template">
+                                <Download size={18} /> Template
                             </button>
                             <label className="btn btn-outline" style={{ cursor: 'pointer', minHeight: '40px', margin: 0 }}>
                                 <Upload size={18} /> Import
