@@ -63,13 +63,15 @@ export const InventoryProvider = ({ children }) => {
     }, []);
 
     const fetchSales = useCallback(async () => {
-        const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false }).limit(150);
+        const { data: salesData } = await supabase.from('sales').select('*, sale_items(*)').order('created_at', { ascending: false }).limit(500);
         if (salesData) {
             const mappedSales = salesData.map(s => ({
                 id: s.id,
                 date: s.date,
                 total: Number(s.total),
                 items: s.items_count,
+                staffUserId: s.staff_user_id || null,
+                staffName: s.staff_name || 'Unknown',
                 details: s.sale_items.map(si => ({
                     productId: si.product_id,
                     name: si.product_name,
@@ -112,7 +114,7 @@ export const InventoryProvider = ({ children }) => {
         }
     }, [fetchInventory, fetchSuppliers, fetchSales, fetchSettings]);
 
-    const { user, loading: authLoading } = useAuth();
+    const { user, profile, loading: authLoading } = useAuth();
     const userId = user?.id;
 
     useEffect(() => {
@@ -391,12 +393,15 @@ export const InventoryProvider = ({ children }) => {
     const recordSale = async (saleItems, buyerDetails) => {
         const total = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
-        // 1. Insert Sales Record
+        // 1. Insert Sales Record (with staff attribution)
+        const staffName = profile?.full_name || user?.user_metadata?.full_name || user?.email || 'Unknown';
         const { data: saleData, error: saleError } = await supabase.from('sales').insert([{
             total,
             items_count: saleItems.length,
             buyer_details: buyerDetails || { name: 'Cash Customer', address: 'N/A' },
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            staff_user_id: user?.id || null,
+            staff_name: staffName
         }]).select().single();
 
         if (saleError || !saleData) {
@@ -437,6 +442,8 @@ export const InventoryProvider = ({ children }) => {
             date: saleData.date,
             items: saleItems.length,
             total,
+            staffUserId: saleData.staff_user_id || null,
+            staffName: saleData.staff_name || 'Unknown',
             details: saleItems,
             buyerDetails: saleData.buyer_details
         };

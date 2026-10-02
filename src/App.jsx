@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
+import StaffDashboard from './pages/StaffDashboard';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Suppliers from './pages/Suppliers';
@@ -29,24 +30,30 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/sales" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
 const PublicRoute = ({ children }) => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
   if (user) {
-    return <Navigate to={isAdmin ? '/' : '/sales'} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
+};
+
+/* Renders the correct dashboard based on the user's role */
+const DashboardSwitch = () => {
+  const { isAdmin } = useAuth();
+  return isAdmin ? <Dashboard /> : <StaffDashboard />;
 };
 
 const App = () => {
@@ -55,7 +62,7 @@ const App = () => {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
+        <Route index element={<ProtectedRoute><DashboardSwitch /></ProtectedRoute>} />
         <Route path="inventory" element={<ProtectedRoute adminOnly><Inventory /></ProtectedRoute>} />
         <Route path="sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
         <Route path="invoices" element={<ProtectedRoute adminOnly><Invoices /></ProtectedRoute>} />
@@ -64,7 +71,7 @@ const App = () => {
         <Route path="audit" element={<ProtectedRoute adminOnly><AuditTrail /></ProtectedRoute>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/sales" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

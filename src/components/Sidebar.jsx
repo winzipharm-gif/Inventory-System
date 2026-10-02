@@ -8,7 +8,7 @@ const Sidebar = ({ closeSidebar }) => {
     const navigate = useNavigate();
 
     const allNavItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/', adminOnly: true },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/', adminOnly: false },
         { icon: Package, label: 'Inventory', path: '/inventory', adminOnly: true },
         { icon: ShoppingCart, label: 'Sales / POS', path: '/sales', adminOnly: false },
         { icon: FileText, label: 'Invoices', path: '/invoices', adminOnly: true },
