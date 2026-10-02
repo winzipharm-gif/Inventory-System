@@ -14,6 +14,8 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
         unit: 'pcs',
         stock: 0,
         minStock: 10,
+        costPrice: 0,
+        sellingPriceFactor: 1.5,
         price: 0,
         expiryDate: ''
     });
@@ -23,7 +25,9 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
         if (product) {
             setFormData({
                 ...product,
-                unit: product.unit || 'pcs'
+                unit: product.unit || 'pcs',
+                costPrice: product.cost_price || 0,
+                sellingPriceFactor: product.selling_price_factor || 1.5
             });
         } else {
             setFormData({
@@ -33,6 +37,8 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                 unit: product?.unit || units[0] || 'pcs',
                 stock: 0,
                 minStock: 10,
+                costPrice: 0,
+                sellingPriceFactor: 1.5,
                 price: 0,
                 expiryDate: ''
             });
@@ -51,6 +57,8 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
             ...formData,
             stock: Number(formData.stock),
             minStock: Number(formData.minStock),
+            cost_price: Number(formData.costPrice),
+            selling_price_factor: Number(formData.sellingPriceFactor),
             price: Number(formData.price)
         };
 
@@ -71,7 +79,19 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        
+        setFormData(prev => {
+            const updated = { ...prev, [name]: value };
+            
+            // Auto-calculate price based on costPrice and sellingPriceFactor
+            if (name === 'costPrice' || name === 'sellingPriceFactor') {
+                const cp = name === 'costPrice' ? Number(value) : Number(updated.costPrice);
+                const spf = name === 'sellingPriceFactor' ? Number(value) : Number(updated.sellingPriceFactor);
+                updated.price = (cp * spf).toFixed(2);
+            }
+            
+            return updated;
+        });
     };
 
     return (
@@ -200,7 +220,35 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Price (₵)</label>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Cost Price (₵)</label>
+                            <input
+                                required
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className="input-field"
+                                name="costPrice"
+                                value={formData.costPrice}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Selling Price Factor</label>
+                            <input
+                                required
+                                type="number"
+                                step="0.01"
+                                min="0.1"
+                                className="input-field"
+                                name="sellingPriceFactor"
+                                value={formData.sellingPriceFactor}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, fontSize: '0.85rem' }}>Calculated Selling Price (₵)</label>
                             <input
                                 required
                                 type="number"
@@ -210,6 +258,8 @@ const AddEditProductModal = ({ isOpen, onClose, product }) => {
                                 name="price"
                                 value={formData.price}
                                 onChange={handleChange}
+                                readOnly
+                                style={{ backgroundColor: 'var(--color-bg-secondary)' }}
                             />
                         </div>
 

@@ -178,6 +178,8 @@ export const InventoryProvider = ({ children }) => {
             stock: product.stock,
             unit: product.unit || 'pcs',
             price: product.price,
+            cost_price: product.cost_price,
+            selling_price_factor: product.selling_price_factor,
             expiry_date: product.expiryDate,
             received_date: product.receivedDate || new Date().toISOString().split('T')[0],
             min_stock: product.minStock
@@ -225,6 +227,8 @@ export const InventoryProvider = ({ children }) => {
         if (updatedProduct.stock !== undefined) payload.stock = updatedProduct.stock;
         if (updatedProduct.unit) payload.unit = updatedProduct.unit;
         if (updatedProduct.price !== undefined) payload.price = updatedProduct.price;
+        if (updatedProduct.cost_price !== undefined) payload.cost_price = updatedProduct.cost_price;
+        if (updatedProduct.selling_price_factor !== undefined) payload.selling_price_factor = updatedProduct.selling_price_factor;
         if (updatedProduct.expiryDate) payload.expiry_date = updatedProduct.expiryDate;
         if (updatedProduct.minStock !== undefined) payload.min_stock = updatedProduct.minStock;
 
